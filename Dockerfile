@@ -1,4 +1,4 @@
-# Sử dụng một image cơ bản của Ubuntu
+# Sử dụng image Ubuntu cơ bản
 FROM ubuntu:20.04
 
 # Đặt các biến môi trường cần thiết
@@ -7,7 +7,7 @@ ENV HADOOP_HOME=/opt/hadoop
 ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
 ENV PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
 
-# Cập nhật hệ thống và cài đặt các gói cần thiết
+# Cài đặt các gói cần thiết
 RUN apt-get update && apt-get install -y \
     openjdk-11-jdk wget curl ssh rsync python3-pip \
     && apt-get clean
@@ -21,24 +21,25 @@ RUN mkdir -p $HADOOP_HOME && \
     mv /opt/hadoop-$HADOOP_VERSION/* $HADOOP_HOME && \
     rm -rf /opt/hadoop-$HADOOP_VERSION
 
-# Thiết lập cấu hình SSH không mật khẩu cho HDFS
+# Thiết lập cấu hình SSH không mật khẩu
 RUN ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa && \
     cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && \
     chmod 0600 ~/.ssh/authorized_keys
-
-# Cấu hình Hadoop (hdfs-site.xml và core-site.xml)
-COPY core-site.xml $HADOOP_CONF_DIR/core-site.xml
-COPY hdfs-site.xml $HADOOP_CONF_DIR/hdfs-site.xml
 
 # Thiết lập quyền
 RUN mkdir -p /opt/hadoop_tmp/hdfs/namenode && \
     mkdir -p /opt/hadoop_tmp/hdfs/datanode && \
     chown -R root:root /opt/hadoop_tmp
 
-# Mở cổng cho HDFS
-EXPOSE 9870 9866 9864
+# Cấu hình HDFS và YARN (copy core-site.xml, hdfs-site.xml, và yarn-site.xml)
+COPY core-site.xml $HADOOP_CONF_DIR/core-site.xml
+COPY hdfs-site.xml $HADOOP_CONF_DIR/hdfs-site.xml
+COPY yarn-site.xml $HADOOP_CONF_DIR/yarn-site.xml
 
-# Khởi tạo HDFS namenode
+# Mở cổng cho HDFS và YARN
+EXPOSE 9870 9864 8088 8042
+
+# Khởi tạo HDFS
 RUN $HADOOP_HOME/bin/hdfs namenode -format
 
 # Thiết lập lệnh khởi chạy

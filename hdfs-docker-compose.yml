@@ -1,45 +1,49 @@
 version: '3'
 services:
   namenode:
-    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    image: custom-hadoop-namenode  
     environment:
       - CLUSTER_NAME=hadoop_cluster
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
     ports:
-      - "9870:9870"    
-      - "9000:9000"    
+      - "9870:9870"
+      - "9000:9000"
     volumes:
-      - namenode_data:/hadoop/dfs/name
+      - namenode_data:/opt/hadoop_tmp/hdfs/namenode
 
   datanode1:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    image: custom-hadoop-namenode
     environment:
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
     volumes:
-      - datanode1_data:/hadoop/dfs/data
+      - datanode1_data:/opt/hadoop_tmp/hdfs/datanode
     depends_on:
       - namenode
 
-  datanode2:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+  resourcemanager:
+    image: custom-hadoop-namenode
     environment:
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
-    volumes:
-      - datanode2_data:/hadoop/dfs/data
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    ports:
+      - "8088:8088"  # Cổng Web UI của ResourceManager
     depends_on:
       - namenode
 
-  datanode3:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+  nodemanager1:
+    image: custom-hadoop-namenode
     environment:
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
-    volumes:
-      - datanode3_data:/hadoop/dfs/data
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
     depends_on:
-      - namenode
+      - resourcemanager
+
+  nodemanager2:
+    image: custom-hadoop-namenode
+    environment:
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    depends_on:
+      - resourcemanager
 
 volumes:
   namenode_data:
   datanode1_data:
   datanode2_data:
-  datanode3_data:
