@@ -2,15 +2,20 @@
 FROM ubuntu:20.04
 
 # Đặt các biến môi trường cần thiết
-ENV HADOOP_VERSION=3.3.4
+ENV HADOOP_VERSION=3.3.5
 ENV HADOOP_HOME=/opt/hadoop
 ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
 ENV PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH=$PATH:$JAVA_HOME/bin
 
-# Cài đặt các gói cần thiết
-RUN apt-get update && apt-get install -y \
-    openjdk-11-jdk wget curl ssh rsync python3-pip \
-    && apt-get clean
+# Cài đặt các gói cần thiết và thiết lập múi giờ tự động
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata && \
+    ln -fs /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime && \
+    dpkg-reconfigure --frontend noninteractive tzdata && \
+    apt-get install -y openjdk-11-jdk wget curl ssh rsync python3-pip && \
+    apt-get clean
 
 # Cài đặt thư viện hdfs cho Python
 RUN pip3 install hdfs
