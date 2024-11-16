@@ -1,16 +1,12 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
-
 import subprocess
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-RESULT_SCRIPT = os.path.join(BASE_DIR, "../result.py")
-PUSH_TO_HDFS_SCRIPT = os.path.join(BASE_DIR, "../push_to_hdfs.py")
-
+RESULT_SCRIPT = os.path.join(BASE_DIR, "result.py")
+PUSH_TO_HDFS_SCRIPT = os.path.join(BASE_DIR, "push_to_hdfs.py")
 
 def run_result_script():
     subprocess.run(["python", RESULT_SCRIPT], check=True)
@@ -29,10 +25,11 @@ with DAG(
         'retry_delay': timedelta(minutes=5),
     },
     description='Crawl data and push to HDFS',
-    schedule_interval='@daily',  
-    start_date=days_ago(1),
+    schedule_interval='@daily',
+    start_date=datetime(2023, 1, 1),
     catchup=False,
 ) as dag:
+
     crawl_data = PythonOperator(
         task_id='crawl_data',
         python_callable=run_result_script

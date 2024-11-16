@@ -1,51 +1,49 @@
-# Sử dụng image Ubuntu cơ bản
 FROM ubuntu:20.04
 
-# Đặt các biến môi trường cần thiết
-ENV HADOOP_VERSION=3.3.5
+ENV JAVA_HOME=/opt/jdk
 ENV HADOOP_HOME=/opt/hadoop
-ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
-ENV PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-ENV PATH=$PATH:$JAVA_HOME/bin
+ENV PATH=$JAVA_HOME/bin:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
 
-# Cài đặt các gói cần thiết và thiết lập múi giờ tự động
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata && \
-    ln -fs /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime && \
-    dpkg-reconfigure --frontend noninteractive tzdata && \
-    apt-get install -y openjdk-11-jdk wget curl ssh rsync python3-pip && \
-    apt-get clean
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    curl \
+    tar \
+    python3 \
+    python3-pip \
+    openjdk-11-jdk-headless && \
+    rm -rf /var/lib/apt/lists/*
 
-# Cài đặt thư viện hdfs cho Python
-RUN pip3 install hdfs
+WORKDIR /opt
 
-# Tạo thư mục cho Hadoop và tải về Hadoop
-RUN mkdir -p $HADOOP_HOME && \
-    wget -qO- https://downloads.apache.org/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz | tar -xz -C /opt/ && \
-    mv /opt/hadoop-$HADOOP_VERSION/* $HADOOP_HOME && \
-    rm -rf /opt/hadoop-$HADOOP_VERSION
+# Copy JDK và Hadoop từ thư mục assets
+COPY ./assets/jdk.tar.gz /opt/jdk.tar.gz
+COPY ./assets/hadoop-3.3.6.tar.gz /opt/hadoop.tar.gz
 
-# Thiết lập cấu hình SSH không mật khẩu
-RUN ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa && \
-    cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && \
-    chmod 0600 ~/.ssh/authorized_keys
+# Giải nén JDK
+RUN tar -xzf /opt/jdk.tar.gz -C /opt && \
+    mv /opt/jdk8u382-b05 /opt/jdk && \
+    rm -f /opt/jdk.tar.gz
 
-# Thiết lập quyền
-RUN mkdir -p /opt/hadoop_tmp/hdfs/namenode && \
-    mkdir -p /opt/hadoop_tmp/hdfs/datanode && \
-    chown -R root:root /opt/hadoop_tmp
+# Giải nén Hadoop
+RUN tar -xzf /opt/hadoop.tar.gz -C /opt && \
+    mv /opt/hadoop-3.3.6 /opt/hadoop && \
+    rm -f /opt/hadoop.tar.gz
 
-# Cấu hình HDFS và YARN (copy core-site.xml, hdfs-site.xml, và yarn-site.xml)
-COPY core-site.xml $HADOOP_CONF_DIR/core-site.xml
-COPY hdfs-site.xml $HADOOP_CONF_DIR/hdfs-site.xml
-COPY yarn-site.xml $HADOOP_CONF_DIR/yarn-site.xml
+# Copy file cấu hình Hadoop
+COPY ./config-files/hadoop-env.sh $HADOOP_HOME/etc/hadoop/
+COPY ./config-files/core-site.xml $HADOOP_HOME/etc/hadoop/
+COPY ./config-files/hdfs-site.xml $HADOOP_HOME/etc/hadoop/
 
-# Mở cổng cho HDFS và YARN
-EXPOSE 9870 9864 8088 8042
+# Tạo thư mục cho NameNode và DataNode
+RUN mkdir -p /opt/hdfs/namenode /opt/hdfs/datanode && \
+    chown -R root:root /opt/hdfs
 
-# Khởi tạo HDFS
-RUN $HADOOP_HOME/bin/hdfs namenode -format
+# Copy và cấu hình entrypoint script
+COPY ./entrypoint.sh /opt/entrypoint.sh
+RUN chmod +x /opt/entrypoint.sh
 
-# Thiết lập lệnh khởi chạy
-CMD ["/bin/bash"]
+# Expose cổng Hadoop
+EXPOSE 9870 9864 8088 9000
+
+# CMD mặc định sử dụng entrypoint
+CMD ["/opt/entrypoint.sh"]
