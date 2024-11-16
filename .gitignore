@@ -1,6 +1,27 @@
-*.parquet
-*.tar.gz
-*.log
-data/
+# Loại bỏ các file lớn trong thư mục assets
+/assets/jdk.tar.gz
+/assets/hadoop-3.3.6.tar.gz
 
+# Loại bỏ dữ liệu và logs trong dags
+/dags/data/*
+/dags/logs/*
+/dags/hdfs/datanode/scripts/*
+/dags/hdfs/namenode/scripts/*
+
+# Loại bỏ thư mục logs chung
+/logs/*
+
+# Loại bỏ các file tạm
+*.parquet
+*.log
+*.tmp
+*.bak
+
+# Loại bỏ thư mục cache Python
 __pycache__/
+*.py[cod]
+
+# Loại bỏ các file Docker build
+*.tar
+*.tar.gz
+*.zip
