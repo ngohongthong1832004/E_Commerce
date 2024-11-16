@@ -4,3 +4,5 @@
 data/
 
 __pycache__/
+assets/hadoop-3.3.6.tar.gz
+assets/jdk.tar.gz
