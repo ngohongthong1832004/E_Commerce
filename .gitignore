@@ -1,2 +1,5 @@
-assets/jdk.tar.gz
-assets/hadoop-3.3.6.tar.gz
+*.parquet
+*.tar.gz
+data/
+
+__pycache__/
