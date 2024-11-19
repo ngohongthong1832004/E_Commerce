@@ -1,3 +1,5 @@
+
+
 FROM ubuntu:20.04
 
 ENV JAVA_HOME=/opt/jdk
@@ -45,5 +47,5 @@ RUN chmod +x /opt/entrypoint.sh
 # Expose cổng Hadoop
 EXPOSE 9870 9864 8088 9000
 
-# CMD mặc định sử dụng entrypoint
 CMD ["/opt/entrypoint.sh"]
+

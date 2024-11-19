@@ -11,6 +11,7 @@ which hdfs || echo "Lệnh hdfs không được tìm thấy trong PATH."
 if [[ "$HOSTNAME" == "namenode" ]]; then
     echo "Starting NameNode setup..."
     mkdir -p /opt/hdfs/namenode /opt/hdfs/datanode
+    mkdir -p /opt/hdfs/namenode /opt/hadoop/tiki_data
     chown -R root:root /opt/hdfs
 
     if [ ! -d "/opt/hdfs/namenode/current" ]; then
@@ -25,7 +26,10 @@ if [[ "$HOSTNAME" == "namenode" ]]; then
 else
     echo "Starting DataNode setup..."
     mkdir -p /opt/hdfs/datanode
+
     chown -R root:root /opt/hdfs
     echo "Starting DataNode..."
     exec hdfs datanode
 fi
+
+
