@@ -10,6 +10,8 @@ services:
       - "9870:9870"  # Web UI NameNode
     volumes:
       - namenode_data:/opt/hdfs/namenode
+      - ./dags/data:/opt/hadoop/data
+
     environment:
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
 
@@ -45,3 +47,4 @@ volumes:
   datanode1_data:
   datanode2_data:
   datanode3_data:
+  

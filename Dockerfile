@@ -1,5 +1,3 @@
-
-
 FROM ubuntu:20.04
 
 ENV JAVA_HOME=/opt/jdk
@@ -40,6 +38,9 @@ COPY ./config-files/hdfs-site.xml $HADOOP_HOME/etc/hadoop/
 RUN mkdir -p /opt/hdfs/namenode /opt/hdfs/datanode && \
     chown -R root:root /opt/hdfs
 
+# Copy dữ liệu từ dags/data
+COPY ./dags/push_to_hdfs.py /opt/hadoop/push_to_hdfs.py
+
 # Copy và cấu hình entrypoint script
 COPY ./entrypoint.sh /opt/entrypoint.sh
 RUN chmod +x /opt/entrypoint.sh
@@ -48,4 +49,3 @@ RUN chmod +x /opt/entrypoint.sh
 EXPOSE 9870 9864 8088 9000
 
 CMD ["/opt/entrypoint.sh"]
-
