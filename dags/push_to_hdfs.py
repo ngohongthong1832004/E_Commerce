@@ -2,11 +2,9 @@ import pyarrow.fs as fs
 import os
 import logging
 
-# Đường dẫn HDFS và thư mục cục bộ
-HDFS_DIR = '/user/hadoop/tiki_data'
-LOCAL_DIR = './data'
+HDFS_DIR = 'user/opt/hadoop/tiki_data'
+LOCAL_DIR = '/opt/hadoop/data'
 
-# Hàm khởi tạo logger
 def init_log(logger_name, log_dir, log_file):
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
@@ -49,6 +47,8 @@ def push_parquet_files(local_dir, hdfs_dir):
     except Exception as e:
         logger.error(f"Error connecting to HDFS: {e}")
 
-# Chạy script nếu được gọi trực tiếp
 if __name__ == "__main__":
-    push_parquet_files(LOCAL_DIR, HDFS_DIR)
+    if os.path.exists(LOCAL_DIR) and any(f.endswith('.parquet') for f in os.listdir(LOCAL_DIR)):
+        push_parquet_files(LOCAL_DIR, HDFS_DIR)
+    else:
+        logger.info(f"No .parquet files found in directory: {LOCAL_DIR}")
