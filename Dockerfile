@@ -19,6 +19,12 @@ WORKDIR /opt
 COPY ./assets/jdk.tar.gz /opt/jdk.tar.gz
 COPY ./assets/hadoop-3.3.6.tar.gz /opt/hadoop.tar.gz
 
+# Copy file requirements.txt vào container
+COPY ./requirements.txt /opt/requirements.txt
+# Cài đặt các package từ requirements.txt
+RUN pip install -r /opt/requirements.txt
+
+
 # Giải nén JDK
 RUN tar -xzf /opt/jdk.tar.gz -C /opt && \
     mv /opt/jdk8u382-b05 /opt/jdk && \

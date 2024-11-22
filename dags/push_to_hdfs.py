@@ -2,7 +2,7 @@ import pyarrow.fs as fs
 import os
 import logging
 
-HDFS_DIR = 'user/opt/hadoop/tiki_data'
+HDFS_DIR = '/opt/hadoop/tiki_data'
 LOCAL_DIR = '/opt/hadoop/data'
 
 def init_log(logger_name, log_dir, log_file):
@@ -22,31 +22,25 @@ logger = init_log('hdfs_tiki', './logs', 'hdfs_tiki.log')
 
 # Hàm đẩy file lên HDFS
 def push_parquet_files(local_dir, hdfs_dir):
-    """
-    Đẩy tất cả các file .parquet từ thư mục cục bộ lên HDFS.
-
-    Args:
-        local_dir (str): Đường dẫn thư mục cục bộ.
-        hdfs_dir (str): Đường dẫn thư mục trên HDFS.
-    """
     try:
-        hdfs = fs.HadoopFileSystem('namenode', port=9000)  # Kết nối đến HDFS
+        logger.info(f"Connecting to HDFS namenode on port 9000...")
+        hdfs = fs.HadoopFileSystem('namenode', port=9000)
+        logger.info("Connected to HDFS.")
         for root, _, files in os.walk(local_dir):
             for file in files:
                 if file.endswith('.parquet'):
                     local_file_path = os.path.join(root, file)
                     hdfs_file_path = f"{hdfs_dir}/{file}"
+                    logger.info(f"Processing file {local_file_path}...")
                     try:
-                        logger.info(f"Uploading {local_file_path} to {hdfs_file_path}...")
                         with open(local_file_path, 'rb') as f:
                             with hdfs.open_output_stream(hdfs_file_path) as out:
                                 out.write(f.read())
                         logger.info(f"Successfully uploaded {file} to HDFS.")
                     except Exception as e:
-                        logger.error(f"Error uploading {file} to HDFS: {e}")
+                        logger.error(f"Error uploading {file}: {e}")
     except Exception as e:
         logger.error(f"Error connecting to HDFS: {e}")
-
 if __name__ == "__main__":
     if os.path.exists(LOCAL_DIR) and any(f.endswith('.parquet') for f in os.listdir(LOCAL_DIR)):
         push_parquet_files(LOCAL_DIR, HDFS_DIR)
