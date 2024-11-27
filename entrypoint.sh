@@ -18,7 +18,7 @@ if [[ "$HOSTNAME" == "namenode" ]]; then
     echo 'export CLASSPATH=$(hadoop classpath)' >> ~/.bashrc
     source ~/.bashrc
 
-    # python3 /opt/hadoop/dags/push_to_hdfs.py
+    python3 /opt/hadoop/dags/push_to_hdfs.py
 
 
     if [ ! -d "/opt/hdfs/namenode/current" ]; then
