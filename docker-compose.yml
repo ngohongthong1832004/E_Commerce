@@ -20,6 +20,8 @@ x-airflow-common:
     &airflow-common-depends-on
     postgres:
       condition: service_healthy
+  networks:
+    - hadoop_network
 
 services:
   postgres:
@@ -36,7 +38,10 @@ services:
       retries: 5
       start_period: 5s
     restart: always
-
+    ports:
+      - "5432:5432"
+    networks:
+      - hadoop_network
 
   airflow-webserver:
     <<: *airflow-common
@@ -54,6 +59,9 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      - hadoop_network
+
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
@@ -68,6 +76,9 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      - hadoop_network
+
   airflow-init:
     <<: *airflow-common
     entrypoint: /bin/bash
@@ -89,7 +100,8 @@ services:
     user: "0:0"
     volumes:
       - ${AIRFLOW_PROJ_DIR:-.}:/sources
-
+    networks:
+      - hadoop_network
 
   namenode:
     image: hadoop_base:1
@@ -101,9 +113,11 @@ services:
     volumes:
       - namenode_data:/opt/hdfs/namenode
       - ./dags/data:/opt/hadoop/data
-
     environment:
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    networks:
+      - hadoop_network
+
   datanode1:
     image: hadoop_base:1
     container_name: datanode1
@@ -112,6 +126,9 @@ services:
       - datanode1_data:/opt/hdfs/datanode
     environment:
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    networks:
+      - hadoop_network
+
   datanode2:
     image: hadoop_base:1
     container_name: datanode2
@@ -120,6 +137,9 @@ services:
       - datanode2_data:/opt/hdfs/datanode
     environment:
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    networks:
+      - hadoop_network
+
   datanode3:
     image: hadoop_base:1
     container_name: datanode3
@@ -128,6 +148,8 @@ services:
       - datanode3_data:/opt/hdfs/datanode
     environment:
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    networks:
+      - hadoop_network
 
 volumes:
   postgres-db-volume:
@@ -135,3 +157,7 @@ volumes:
   datanode1_data:
   datanode2_data:
   datanode3_data:
+
+networks:
+  hadoop_network:
+    driver: bridge

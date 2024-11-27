@@ -8,6 +8,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULT_SCRIPT = os.path.join(BASE_DIR, "result.py")
 PUSH_TO_HDFS_SCRIPT = os.path.join(BASE_DIR, "push_to_hdfs.py")
+MIGRATE_HDFS_TO_POSTGRES_SCRIPT = os.path.join(BASE_DIR, "migrate_hdfs_to_postgres.py")
 
 def run_script(script_path):
     """
@@ -46,4 +47,15 @@ with DAG(
         op_args=[PUSH_TO_HDFS_SCRIPT],  # Truyền đường dẫn script "push_to_hdfs.py"
     )
 
-    crawl_data >> push_to_hdfs
+    migrate_hdfs_to_postgres = PythonOperator(
+        task_id='migrate_hdfs_to_postgres',
+        python_callable=run_script,
+        op_args=[MIGRATE_HDFS_TO_POSTGRES_SCRIPT],  # Truyền đường dẫn script "migrate_hdfs_to_postgres.py"
+    )
+
+
+    # crawl_data 
+    push_to_hdfs
+    # migrate_hdfs_to_postgres
+    
+    
