@@ -1,12 +1,5 @@
+# Base Image
 FROM ubuntu:20.04
-
-# Environment setup
-ENV JAVA_HOME=/opt/jdk
-ENV HADOOP_HOME=/opt/hadoop
-ENV SPARK_HOME=/opt/spark
-ENV PATH=$JAVA_HOME/bin:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SPARK_HOME/bin:$PATH
-ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
-ENV LD_LIBRARY_PATH=$JAVA_HOME/lib/server:$LD_LIBRARY_PATH
 
 # Install essential packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -21,34 +14,36 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /opt
 
-# Copy JDK, Hadoop, and Spark archives
+# Copy JDK tarball into the image
 COPY ./assets/jdk.tar.gz /opt/jdk.tar.gz
-COPY ./assets/hadoop-3.3.6.tar.gz /opt/hadoop.tar.gz
-COPY ./assets/spark-3.5.3-bin-hadoop3.tgz /opt/spark.tar.gz
-
-# Copy PostgreSQL driver
-RUN mkdir -p /opt/spark/jars
-COPY ./assets/postgresql-42.7.4.jar /opt/spark/jars/postgresql-42.7.4.jar
-
-# Install Python dependencies
-COPY ./requirements.txt /opt/requirements.txt
-RUN pip3 install -r /opt/requirements.txt
 
 # Extract and configure JDK
 RUN tar -xzf /opt/jdk.tar.gz -C /opt && \
     mv /opt/jdk8u382-b05 /opt/jdk && \
-    rm -f /opt/jdk.tar.gz
+    rm -f /opt/jdk.tar.gz && \
+    ls -l /opt/jdk/jre/lib/amd64/server/libjvm.so
 
-# Extract and configure Hadoop
+# Set JAVA_HOME and library path
+ENV JAVA_HOME=/opt/jdk
+ENV LD_LIBRARY_PATH=$JAVA_HOME/jre/lib/amd64/server:$LD_LIBRARY_PATH
+
+# Copy and configure Hadoop
+COPY ./assets/hadoop-3.3.6.tar.gz /opt/hadoop.tar.gz
 RUN tar -xzf /opt/hadoop.tar.gz -C /opt && \
     mv /opt/hadoop-3.3.6 /opt/hadoop && \
     rm -f /opt/hadoop.tar.gz
 
-# Extract and configure Spark
+# Copy and configure Spark
+COPY ./assets/spark-3.5.3-bin-hadoop3.tgz /opt/spark.tar.gz
 RUN tar -xzf /opt/spark.tar.gz -C /opt && \
-    rsync -av /opt/spark-3.5.3-bin-hadoop3/ /opt/spark/ && \
-    rm -rf /opt/spark-3.5.3-bin-hadoop3 && \
+    mv /opt/spark-3.5.3-bin-hadoop3 /opt/spark && \
     rm -f /opt/spark.tar.gz
+
+# Set Spark and Hadoop environment variables
+ENV HADOOP_HOME=/opt/hadoop
+ENV SPARK_HOME=/opt/spark
+ENV PATH=$JAVA_HOME/bin:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SPARK_HOME/bin:$PATH
+ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
 
 # Configure Spark environment
 RUN cp $SPARK_HOME/conf/spark-env.sh.template $SPARK_HOME/conf/spark-env.sh && \

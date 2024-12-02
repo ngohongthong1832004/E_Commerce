@@ -46,6 +46,11 @@ services:
   airflow-webserver:
     <<: *airflow-common
     command: webserver
+    # environment:
+    #   - JAVA_HOME=/opt/jdk
+    #   - LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
+    volumes:
+      - /opt/jdk:/opt/jdk
     ports:
       - "8080:8080"
     healthcheck:

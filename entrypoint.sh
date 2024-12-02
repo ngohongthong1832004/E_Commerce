@@ -18,7 +18,11 @@ if [[ "$HOSTNAME" == "namenode" ]]; then
     echo 'export CLASSPATH=$(hadoop classpath)' >> ~/.bashrc
     source ~/.bashrc
 
-    python3 /opt/hadoop/dags/push_to_hdfs.py
+    export JAVA_HOME=/opt/jdk
+    export LD_LIBRARY_PATH=/opt/jdk/jre/lib/amd64/server:$LD_LIBRARY_PATH
+
+
+    # python3 /opt/hadoop/dags/push_to_hdfs.py
 
 
     if [ ! -d "/opt/hdfs/namenode/current" ]; then

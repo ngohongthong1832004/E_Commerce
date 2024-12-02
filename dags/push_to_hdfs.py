@@ -2,6 +2,14 @@ import pyarrow.fs as fs
 import os
 import logging
 
+import os
+
+# Đặt JAVA_HOME và LD_LIBRARY_PATH
+os.environ["JAVA_HOME"] = "/opt/jdk"
+os.environ["LD_LIBRARY_PATH"] = "/opt/jdk/jre/lib/amd64/server:" + os.environ.get("LD_LIBRARY_PATH", "")
+
+
+
 # Define directories
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
