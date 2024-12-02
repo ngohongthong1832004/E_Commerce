@@ -1,4 +1,3 @@
----
 x-airflow-common:
   &airflow-common
   image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.10.3}
@@ -21,6 +20,8 @@ x-airflow-common:
     &airflow-common-depends-on
     postgres:
       condition: service_healthy
+  networks:
+    - hadoop_network
 
 services:
   postgres:
@@ -37,12 +38,19 @@ services:
       retries: 5
       start_period: 5s
     restart: always
-
-
+    ports:
+      - "5432:5432"
+    networks:
+      - hadoop_network
 
   airflow-webserver:
     <<: *airflow-common
     command: webserver
+    # environment:
+    #   - JAVA_HOME=/opt/jdk
+    #   - LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
+    volumes:
+      - /opt/jdk:/opt/jdk
     ports:
       - "8080:8080"
     healthcheck:
@@ -56,6 +64,8 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      - hadoop_network
 
   airflow-scheduler:
     <<: *airflow-common
@@ -71,6 +81,8 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      - hadoop_network
 
   airflow-init:
     <<: *airflow-common
@@ -93,6 +105,64 @@ services:
     user: "0:0"
     volumes:
       - ${AIRFLOW_PROJ_DIR:-.}:/sources
+    networks:
+      - hadoop_network
+
+  namenode:
+    image: hadoop_base:1
+    container_name: namenode
+    hostname: namenode
+    ports:
+      - "9000:9000"  # RPC NameNode
+      - "9870:9870"  # Web UI NameNode
+    volumes:
+      - namenode_data:/opt/hdfs/namenode
+      - ./dags/data:/opt/hadoop/data
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    networks:
+      - hadoop_network
+
+  datanode1:
+    image: hadoop_base:1
+    container_name: datanode1
+    hostname: datanode1
+    volumes:
+      - datanode1_data:/opt/hdfs/datanode
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    networks:
+      - hadoop_network
+
+  datanode2:
+    image: hadoop_base:1
+    container_name: datanode2
+    hostname: datanode2
+    volumes:
+      - datanode2_data:/opt/hdfs/datanode
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    networks:
+      - hadoop_network
+
+  datanode3:
+    image: hadoop_base:1
+    container_name: datanode3
+    hostname: datanode3
+    volumes:
+      - datanode3_data:/opt/hdfs/datanode
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    networks:
+      - hadoop_network
 
 volumes:
   postgres-db-volume:
+  namenode_data:
+  datanode1_data:
+  datanode2_data:
+  datanode3_data:
+
+networks:
+  hadoop_network:
+    driver: bridge

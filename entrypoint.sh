@@ -14,6 +14,17 @@ if [[ "$HOSTNAME" == "namenode" ]]; then
     mkdir -p /opt/hdfs/namenode /opt/hadoop/tiki_data
     chown -R root:root /opt/hdfs
 
+    export CLASSPATH=$(hadoop classpath)
+    echo 'export CLASSPATH=$(hadoop classpath)' >> ~/.bashrc
+    source ~/.bashrc
+
+    export JAVA_HOME=/opt/jdk
+    export LD_LIBRARY_PATH=/opt/jdk/jre/lib/amd64/server:$LD_LIBRARY_PATH
+
+
+    # python3 /opt/hadoop/dags/push_to_hdfs.py
+
+
     if [ ! -d "/opt/hdfs/namenode/current" ]; then
         echo "Formatting NameNode..."
         hdfs namenode -format -force -nonInteractive
